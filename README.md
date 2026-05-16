@@ -12,6 +12,7 @@ node src/cli.js schema --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
 node src/cli.js invoice render examples/invoice.sample.json --format html --out .invoicer/sample.html --json
+node src/cli.js invoice render examples/invoice.sample.json --format pdf --out .invoicer/sample.pdf --json
 ```
 
 ## Core Commands
@@ -37,5 +38,7 @@ node src/cli.js asset delete <id> --asset-store .invoicer/assets.json --json
 ## Agent Contract
 
 All commands support `--json`. Validation failures exit with code `2` and include field-level `issues`. Other command failures exit with code `1` and include a stable error `code`.
+
+Rendering supports deterministic HTML and dependency-free PDF output. PNG remains a future parity target.
 
 See [docs/agent-handoff.md](docs/agent-handoff.md) and [skills/invoicer-cli/SKILL.md](skills/invoicer-cli/SKILL.md).

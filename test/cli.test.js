@@ -103,6 +103,19 @@ test("invoice render writes HTML output", () => {
   assert.match(html, /Northstar Studio LLC/);
 });
 
+test("invoice render writes dependency-free PDF output", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-render-pdf-"));
+  const out = path.join(dir, "invoice.pdf");
+  const result = runJson(["invoice", "render", sample, "--format", "pdf", "--out", out]);
+  const pdf = readFileSync(out);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.format, "pdf");
+  assert.equal(result.outputPath, out);
+  assert.ok(result.byteLength > 100);
+  assert.equal(pdf.subarray(0, 8).toString("latin1"), "%PDF-1.4");
+});
+
 test("asset registry supports upload list and delete", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "invoicer-assets-"));
   const assetStore = path.join(dir, "assets.json");

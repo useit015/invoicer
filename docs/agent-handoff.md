@@ -15,6 +15,7 @@ node src/cli.js invoice init --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
 node src/cli.js invoice render examples/invoice.sample.json --format html --out .invoicer/sample.html --json
+node src/cli.js invoice render examples/invoice.sample.json --format pdf --out .invoicer/sample.pdf --json
 ```
 
 ## Data Contract
@@ -49,12 +50,12 @@ Structured errors look like:
 
 ## Known Parity Gaps
 
-- PDF and PNG rendering are not implemented in this milestone; the CLI writes deterministic HTML.
+- PNG rendering is not implemented in this milestone; the CLI writes deterministic HTML and dependency-free PDF.
 - Server-backed storage, authentication, and Cloudflare R2 are not implemented.
 - The web dashboard is not implemented because the local repo started blank.
 
 Recommended next slices:
 
-1. Add PDF rendering or browser-backed PNG capture behind the existing `invoice render` contract.
+1. Add browser-backed PNG capture behind the existing `invoice render` contract.
 2. Add server/database storage behind the existing storage abstraction.
 3. Add web dashboard parity only after the CLI contract remains stable.

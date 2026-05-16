@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { CliError } from "./errors.js";
+import { mkdir, writeFile } from "node:fs/promises";
 import { readJsonFile, resolveFromCwd, writeJsonFile, writeTextFile } from "./io.js";
-import { renderInvoiceHtml } from "./render.js";
+import path from "node:path";
+import { renderInvoiceHtml, renderInvoicePdf } from "./render.js";
 import {
   calculateInvoiceTotals,
   createDefaultInvoice,
@@ -78,9 +80,24 @@ async function invoiceCommand(args, opts) {
     case "render": {
       const invoice = await readValidInvoiceArg(args[1]);
       const format = opts.format ?? "html";
-      if (format !== "html") {
-        throw new CliError("unsupported_format", "Only html rendering is available in this milestone.");
+      if (!["html", "pdf"].includes(format)) {
+        throw new CliError("unsupported_format", "Render format must be html or pdf.");
       }
+
+      if (format === "pdf") {
+        const pdf = renderInvoicePdf(invoice);
+        if (opts.out) {
+          const outputPath = resolveFromCwd(opts.out);
+          await writeBinaryFile(outputPath, pdf);
+          return output({ ok: true, format, outputPath, byteLength: pdf.byteLength, totals: calculateInvoiceTotals(invoice) }, opts);
+        }
+        if (opts.json) {
+          return output({ ok: true, format, pdfBase64: pdf.toString("base64"), byteLength: pdf.byteLength, totals: calculateInvoiceTotals(invoice) }, opts);
+        }
+        process.stdout.write(pdf);
+        return;
+      }
+
       const html = renderInvoiceHtml(invoice);
       if (opts.out) {
         await writeTextFile(resolveFromCwd(opts.out), html);
@@ -201,6 +218,11 @@ function output(value, opts) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
+async function writeBinaryFile(filePath, contents) {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, contents);
+}
+
 function handleError(error, opts) {
   const code = error instanceof CliError ? error.code : "unexpected_error";
   const message = error instanceof Error ? error.message : String(error);
@@ -286,6 +308,7 @@ Usage:
   invoicer invoice validate <invoice.json> --json
   invoicer invoice total <invoice.json> --json
   invoicer invoice render <invoice.json> --format html --out invoice.html --json
+  invoicer invoice render <invoice.json> --format pdf --out invoice.pdf --json
   invoicer invoice create <invoice.json> [--store .invoicer/invoices.json] --json
   invoicer invoice list [--store .invoicer/invoices.json] --json
   invoicer invoice get <id> [--store .invoicer/invoices.json] --json

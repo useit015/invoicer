@@ -37,6 +37,7 @@ node src/cli.js invoice total path/to/invoice.json --json
 
 ```bash
 node src/cli.js invoice render path/to/invoice.json --format html --out .invoicer/invoice.html --json
+node src/cli.js invoice render path/to/invoice.json --format pdf --out .invoicer/invoice.pdf --json
 ```
 
 5. Use an explicit store path for automated CRUD:
@@ -51,4 +52,5 @@ node src/cli.js invoice list --store .invoicer/agent-run.json --json
 - Always pass `--json` in automation.
 - Treat exit code `2` as validation failure with actionable `issues`.
 - Use explicit `--store` and `--asset-store` paths in tests or agent runs.
-- Do not assume PDF or PNG support yet; this milestone renders HTML only.
+- Use `--format pdf` for document output and `--format html` for easy inspection.
+- Do not assume PNG support yet.

@@ -106,6 +106,45 @@ export function renderInvoiceHtml(invoice) {
 `;
 }
 
+export function renderInvoicePdf(invoice) {
+  const lines = invoicePdfLines(invoice).flatMap((line) => wrapPdfLine(line, 92));
+  const content = [
+    "BT",
+    "/F1 11 Tf",
+    "14 TL",
+    "50 792 Td",
+    ...lines.map((line) => `(${escapePdfText(line)}) Tj T*`),
+    "ET",
+  ].join("\n");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream`,
+  ];
+
+  const parts = ["%PDF-1.4\n"];
+  const offsets = [0];
+
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(parts.join(""), "latin1"));
+    parts.push(`${index + 1} 0 obj\n${object}\nendobj\n`);
+  });
+
+  const xrefOffset = Buffer.byteLength(parts.join(""), "latin1");
+  parts.push(`xref\n0 ${objects.length + 1}\n`);
+  parts.push("0000000000 65535 f \n");
+
+  offsets.slice(1).forEach((offset) => {
+    parts.push(`${String(offset).padStart(10, "0")} 00000 n \n`);
+  });
+
+  parts.push(`trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`);
+
+  return Buffer.from(parts.join(""), "latin1");
+}
+
 function renderPairs(pairs) {
   return pairs.map((entry) => `<p><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</p>`).join("");
 }
@@ -125,4 +164,91 @@ function formatDate(value) {
 
 function formatMoney(value) {
   return Number(value).toFixed(2);
+}
+
+function invoicePdfLines(invoice) {
+  const totals = calculateInvoiceTotals(invoice);
+  const serial = `${invoice.invoiceDetails.prefix}${invoice.invoiceDetails.serialNumber}`;
+  const lines = [
+    `Invoice ${serial}`,
+    `Currency: ${invoice.invoiceDetails.currency}`,
+    `Date: ${invoice.invoiceDetails.date}`,
+  ];
+
+  if (invoice.invoiceDetails.dueDate) {
+    lines.push(`Due Date: ${invoice.invoiceDetails.dueDate}`);
+  }
+
+  if (invoice.invoiceDetails.paymentTerms) {
+    lines.push(`Payment Terms: ${invoice.invoiceDetails.paymentTerms}`);
+  }
+
+  lines.push(
+    "",
+    "Billed By",
+    invoice.companyDetails.name,
+    invoice.companyDetails.address,
+    ...invoice.companyDetails.metadata.map((entry) => `${entry.label}: ${entry.value}`),
+    "",
+    "Billed To",
+    invoice.clientDetails.name,
+    invoice.clientDetails.address,
+    ...invoice.clientDetails.metadata.map((entry) => `${entry.label}: ${entry.value}`),
+    "",
+    "Items",
+  );
+
+  invoice.items.forEach((item) => {
+    lines.push(`${item.name} | Qty ${item.quantity} | Unit ${formatMoney(item.unitPrice)} | Total ${formatMoney(item.quantity * item.unitPrice)}`);
+    if (item.description) lines.push(`  ${item.description}`);
+  });
+
+  lines.push("", `Subtotal: ${formatMoney(totals.subtotal)}`);
+  totals.adjustments.forEach((entry) => {
+    lines.push(`${entry.label} (${entry.type} ${entry.value}): ${formatMoney(entry.amount)}`);
+  });
+  lines.push(`Total: ${formatMoney(totals.total)}`);
+
+  if (invoice.metadata.paymentInformation.length) {
+    lines.push("", "Payment Information", ...invoice.metadata.paymentInformation.map((entry) => `${entry.label}: ${entry.value}`));
+  }
+
+  if (invoice.metadata.notes) {
+    lines.push("", "Notes", invoice.metadata.notes);
+  }
+
+  if (invoice.metadata.terms) {
+    lines.push("", "Terms", invoice.metadata.terms);
+  }
+
+  return lines;
+}
+
+function wrapPdfLine(line, width) {
+  if (line.length <= width) return [line];
+
+  const words = line.split(" ");
+  const output = [];
+  let current = "";
+
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > width && current) {
+      output.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  });
+
+  if (current) output.push(current);
+  return output;
+}
+
+function escapePdfText(value) {
+  return String(value)
+    .replace(/[^\x20-\x7E]/gu, " ")
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)");
 }
