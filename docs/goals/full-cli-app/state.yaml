@@ -1,0 +1,398 @@
+# GoalBuddy v2 state.yaml
+
+version: 2
+
+goal:
+  title: "Full CLI App"
+  slug: "full-cli-app"
+  kind: open_ended
+  tranche: "Prioritize all major pro CLI dimensions together: feature-complete workflows, richer commands, cleaner architecture, stronger tests, better docs, agent handoff, and release/install polish."
+  status: done
+  intake:
+    original_request: "Need to make this into a full CLI app with richer commands, better docs and architecture."
+    interpreted_outcome: "Upgrade the existing invoicer CLI into a fuller professional CLI app across workflow breadth, architecture, docs, agent handoff, and release/install polish."
+    input_shape: vague
+    audience: "Developers, CLI-comfortable business users, and coding agents operating local invoicing workflows."
+    authority: requested
+    proof_type: demo
+    completion_proof: "Full pro-ready CLI evidence: richer business capabilities beyond single-invoice CRUD, cleaner internal architecture, install/release/package polish, passing tests, workflow docs, and an agent can run representative flows without guessing."
+    likely_misfire: "Add random commands without coherent architecture, stable data model, migration path, or documented workflows."
+    blind_spots_considered:
+      - "Fresh local board selected."
+      - "User clarified: prioritize all dimensions, not only feature-complete workflow."
+    existing_plan_facts:
+      - "Current CLI already has invoice CRUD/status/render, themes, local asset registry, tests, README, agent handoff docs, and companion skill."
+      - "Preserve small-batch commit practice."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: generated
+    url: "http://goalbuddy.localhost:41737/full-cli-app/"
+    command: "npx goalbuddy board /Users/oussmustaine/Documents/invoicer/docs/goals/full-cli-app"
+  github_projects:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy extend github-projects"
+    missing: []
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "Map the current CLI architecture, command surface, data model, docs, tests, and gaps for fuller invoicing workflows."
+    inputs:
+      - "Local repository root."
+      - "Previous implemented CLI and docs."
+    constraints:
+      - "Read-only."
+      - "Prefer concrete file-path evidence."
+    expected_output:
+      - "Current architecture map."
+      - "Current command inventory."
+      - "Verification command inventory."
+      - "Ranked workflow, architecture, docs, and release-polish gaps."
+      - "Candidate implementation slices."
+    receipt:
+      result: done
+      summary: "Current CLI has invoice CRUD/status/render, themes, asset registry, tests, README, handoff docs, and skill. Gaps for a pro CLI app: no client/customer workflow, no reusable item catalog, no project config/defaults, no import/export/backup command, monolithic CLI dispatcher, and limited npm/release metadata."
+      evidence:
+        - "src/cli.js"
+        - "src/storage.js"
+        - "src/schema.js"
+        - "src/render.js"
+        - "src/themes.js"
+        - "test/cli.test.js"
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "package.json"
+        - ".gitignore"
+      command_inventory:
+        - "schema"
+        - "theme list/show"
+        - "invoice init/validate/total/render/create/list/get/edit/delete/status"
+        - "asset upload/list/delete"
+      verification_commands:
+        - "npm test"
+        - "node src/cli.js help"
+        - "node src/cli.js schema --json"
+        - "node src/cli.js theme list --json"
+      ranked_gaps:
+        - "Reusable clients/customers and catalog items are missing, so users and agents must duplicate invoice party and item data."
+        - "No config/defaults command, so theme/currency/store defaults are manual per command."
+        - "No import/export/backup workflow, which limits pro CLI data portability."
+        - "src/cli.js is a monolithic dispatcher; richer commands will become harder to maintain without command modules."
+        - "Package metadata lacks files, repository metadata, keywords, package smoke checks, and release docs."
+      candidate_slices:
+        - "Add config, client, item catalog, and export/import commands with store architecture support, tests, docs, and release metadata."
+        - "Refactor command dispatch into command modules before adding more features."
+        - "Add packaging/release polish only, including npm pack verification and changelog."
+      spawned_tasks:
+        - T002
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Choose the largest safe useful implementation slice spanning workflow breadth, architecture, docs, and release/install polish."
+    inputs:
+      - "T001 receipt."
+      - "Original request and intake facts."
+    constraints:
+      - "Do not implement."
+      - "Prioritize all major pro CLI dimensions together."
+      - "Require allowed_files, verify commands, stop_if, and small-batch commit guidance."
+    expected_output:
+      - "Decision and rationale."
+      - "Exact Worker objective."
+      - "allowed_files."
+      - "verify commands."
+      - "stop_if conditions."
+      - "Commit batch guidance."
+    receipt:
+      result: done
+      decision: "approved"
+      full_outcome_complete: false
+      rationale: "To prioritize all requested dimensions, the next slice should combine business workflow breadth, architecture, docs, agent handoff, tests, and package polish. The current repo is small enough for one coherent vertical slice."
+      exact_worker_objective: "Refactor CLI dispatch into command modules and add pro app workflows: config/defaults, reusable clients, reusable catalog items, data export/import backup, package metadata/release docs, tests, README, agent handoff, and skill updates."
+      allowed_files:
+        - "package.json"
+        - "README.md"
+        - "CHANGELOG.md"
+        - "docs/**"
+        - "skills/invoicer-cli/**"
+        - "src/**"
+        - "test/**"
+        - "examples/**"
+      verify:
+        - "npm test"
+        - "node src/cli.js config get --json"
+        - "node src/cli.js client create --name 'Acme Co' --email billing@acme.example --json"
+        - "node src/cli.js item create --name 'Consulting' --unit-price 125 --json"
+        - "node src/cli.js data export --out /tmp/invoicer-export.json --json"
+        - "node src/cli.js data import /tmp/invoicer-export.json --store /tmp/invoicer-import-invoices.json --json"
+        - "npm pack --dry-run"
+        - "git diff --check"
+      stop_if:
+        - "Need files outside allowed_files."
+        - "Need external package dependencies."
+        - "Verification fails twice for the same reason."
+      commit_batch_guidance:
+        - "Commit architecture and richer commands after tests pass."
+        - "Commit docs/package polish separately if practical."
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Refactor CLI dispatch into command modules and add pro app workflows: config/defaults, reusable clients, reusable catalog items, data export/import backup, package metadata/release docs, tests, README, agent handoff, and skill updates."
+    allowed_files:
+      - "package.json"
+      - ".gitignore"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "docs/**"
+      - "skills/invoicer-cli/**"
+      - "src/**"
+      - "test/**"
+      - "examples/**"
+    verify:
+      - "npm test"
+      - "node src/cli.js config get --json"
+      - "node src/cli.js client create --name 'Acme Co' --email billing@acme.example --json"
+      - "node src/cli.js item create --name 'Consulting' --unit-price 125 --json"
+      - "node src/cli.js data export --out /tmp/invoicer-export.json --json"
+      - "node src/cli.js data import /tmp/invoicer-export.json --store /tmp/invoicer-import-invoices.json --json"
+      - "npm pack --dry-run"
+      - "git diff --check"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Need external package dependencies."
+      - "Verification fails twice for the same reason."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "Commit in small batches after verified coherent changes."
+      - "Preserve existing CLI contracts unless deliberately extending them."
+      - "Keep docs and skill updated with command changes."
+    expected_output:
+      - "Implemented richer workflow slice."
+      - "Architecture improvements."
+      - "Tests and docs."
+      - "Verification results."
+      - "Commit hash."
+    receipt:
+      result: done
+      changed_files:
+        - ".gitignore"
+        - "CHANGELOG.md"
+        - "package.json"
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+        - "src/cli.js"
+        - "src/command-utils.js"
+        - "src/help.js"
+        - "src/storage.js"
+        - "src/commands/asset.js"
+        - "src/commands/client.js"
+        - "src/commands/config.js"
+        - "src/commands/data.js"
+        - "src/commands/invoice.js"
+        - "src/commands/item.js"
+        - "src/commands/theme.js"
+        - "test/cli.test.js"
+      commands:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js config get --json"
+          status: pass
+        - cmd: "node src/cli.js client create --name 'Acme Co' --email billing@acme.example --json"
+          status: pass
+        - cmd: "node src/cli.js item create --name 'Consulting' --unit-price 125 --json"
+          status: pass
+        - cmd: "node src/cli.js data export --out /tmp/invoicer-export.json --json"
+          status: pass
+        - cmd: "node src/cli.js data import /tmp/invoicer-export.json --store /tmp/invoicer-import-invoices.json --json"
+          status: pass
+        - cmd: "npm pack --dry-run"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      commits:
+        - "4aab2a2 feat: expand pro cli workflows"
+      summary: "Refactored CLI dispatch into command modules; added config defaults, client records, catalog items, data export/import, package metadata, changelog, pack check, expanded docs, skill updates, and tests."
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add integrated pro workflows: compose invoice JSON from saved clients/catalog items and generate invoice summary reports."
+    allowed_files:
+      - "README.md"
+      - "docs/**"
+      - "skills/invoicer-cli/**"
+      - "src/**"
+      - "test/**"
+    verify:
+      - "npm test"
+      - "node src/cli.js report summary --json"
+      - "node src/cli.js invoice compose --client <fixture-client> --item <fixture-item>:2 --out /tmp/composed-invoice.json --json"
+      - "node src/cli.js invoice validate /tmp/composed-invoice.json --json"
+      - "git diff --check"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need external package dependencies."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "Preserve existing CLI contracts."
+      - "Keep compose/report commands deterministic and JSON-friendly."
+      - "Commit this as a separate verified batch."
+    expected_output:
+      - "invoice compose command."
+      - "report summary command."
+      - "Tests and docs."
+      - "Verification results and commit hash."
+    receipt:
+      result: done
+      changed_files:
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+        - "src/cli.js"
+        - "src/help.js"
+        - "src/commands/invoice.js"
+        - "src/commands/report.js"
+        - "test/cli.test.js"
+      commands:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js invoice compose --client <fixture-client> --item CONSULT:2 --out /tmp/composed-invoice.json --json"
+          status: pass
+        - cmd: "node src/cli.js invoice validate /tmp/composed-invoice.json --json"
+          status: pass
+        - cmd: "node src/cli.js report summary --store <fixture-store> --json"
+          status: pass
+        - cmd: "npm pack --dry-run"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      commits:
+        - "32daa5c feat: compose invoices and report summaries"
+      summary: "Added invoice composition from saved clients/catalog items and report summary aggregation, with tests, README, handoff doc, skill, help text, and package verification."
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Final audit: prove whether the full CLI workflow tranche is complete."
+    inputs:
+      - "All done task receipts."
+      - "Last verification."
+      - "Current dirty diff."
+      - "Docs and agent handoff evidence."
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the work is only planning or docs with no richer workflow capability, architecture improvement, and install/release polish."
+      - "Reject completion if required Worker work is still queued or active."
+    expected_output:
+      - "complete | not_complete."
+      - "full_outcome_complete: true | false."
+      - "Evidence another agent can run representative workflows without guessing."
+      - "Next task if not complete."
+    receipt:
+      result: done
+      decision: "complete"
+      full_outcome_complete: true
+      summary: "The full pro-ready CLI tranche is complete: the app now has richer business workflows, modular command architecture, expanded docs/skill handoff, package/release metadata, import/export, config defaults, clients, catalog items, invoice composition, reports, and passing representative verification."
+      completion_mapping:
+        richer_commands:
+          - "config get/set"
+          - "client create/list/get/delete"
+          - "item create/list/get/delete"
+          - "invoice compose from saved clients/catalog items"
+          - "data export/import"
+          - "report summary"
+        architecture: "CLI dispatch is split into src/commands modules with shared command-utils/help/storage/schema/render/theme layers."
+        docs_and_agent_handoff:
+          - "README.md"
+          - "docs/agent-handoff.md"
+          - "skills/invoicer-cli/SKILL.md"
+          - "CHANGELOG.md"
+        release_polish:
+          - "package metadata includes repository, homepage, bugs, keywords, files whitelist, and pack:check."
+          - "npm pack --dry-run produces a lean package without GoalBuddy artifacts."
+      evidence:
+        - "src/commands/config.js"
+        - "src/commands/client.js"
+        - "src/commands/item.js"
+        - "src/commands/data.js"
+        - "src/commands/invoice.js"
+        - "src/commands/report.js"
+        - "src/command-utils.js"
+        - "test/cli.test.js"
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+        - "package.json"
+      verification:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js invoice compose --client <fixture-client> --item CONSULT:2 --out /tmp/invoicer-final-composed.json --json"
+          status: pass
+        - cmd: "node src/cli.js invoice validate /tmp/invoicer-final-composed.json --json"
+          status: pass
+        - cmd: "node src/cli.js report summary --store <fixture-store> --json"
+          status: pass
+        - cmd: "node src/cli.js data export --store <fixture-store> --out /tmp/invoicer-final-export.json --json"
+          status: pass
+        - cmd: "npm pack --dry-run"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      residual_gaps:
+        - "Future extensions can add PNG capture, server/database storage, aging buckets, CSV export, or web dashboard parity."
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: pass
+    task: T999
+    commands:
+      - "npm test"
+      - "node src/cli.js invoice compose --client <fixture-client> --item CONSULT:2 --out /tmp/invoicer-final-composed.json --json"
+      - "node src/cli.js invoice validate /tmp/invoicer-final-composed.json --json"
+      - "node src/cli.js report summary --store <fixture-store> --json"
+      - "node src/cli.js data export --store <fixture-store> --out /tmp/invoicer-final-export.json --json"
+      - "npm pack --dry-run"
+      - "git diff --check"
