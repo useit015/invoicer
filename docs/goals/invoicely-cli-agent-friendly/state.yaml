@@ -1,0 +1,421 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Invoicely CLI Agent-Friendly Version"
+  slug: "invoicely-cli-agent-friendly"
+  kind: open_ended
+  tranche: "Complete diagnostic intake, then map the reference project and local repo before implementing successive safe verified slices until a useful CLI and agent-facing workflow exists."
+  status: done
+  intake:
+    original_request: "Need to make a CLI version of legions-developer/invoicely while making it agent friendly, maybe CLI plus skill."
+    interpreted_outcome: "Map the reference Invoicely project, select the highest-value workflows to port, then create a CLI-first invoicing tool plus agent-friendly surfaces and possibly a companion skill."
+    input_shape: vague
+    audience: "Developers and coding agents operating invoice workflows locally."
+    authority: requested
+    proof_type: demo
+    completion_proof: "Another agent can use the produced CLI docs/spec or companion skill handoff to inspect the intended Invoicely workflow scope, run or verify representative commands, and automate the next implementation slice without guessing."
+    likely_misfire: "Build a thin wrapper or partial clone that does not expose stable agent-friendly commands, outputs, verification, or documentation."
+    blind_spots_considered:
+      - "Visual board selected: local live board."
+      - "First tranche target selected: feature parity discovery."
+      - "Success proof selected: agent handoff proof."
+      - "Scope selected: full product path may be changed when Scout/Judge evidence supports it."
+      - "CLI surface, persistence model, and companion skill scope still need clarification."
+    existing_plan_facts:
+      - "Use local live GoalBuddy board."
+      - "First optimize for feature parity discovery before implementation."
+      - "Prove usefulness through an agent handoff, not only human-facing notes."
+      - "Full product path is allowed during execution if needed: CLI, backend, persistence, docs/skill, and web surfaces."
+      - "Consider CLI plus Codex skill."
+      - "Workspace instruction: always commit in small batches."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/invoicely-cli-agent-friendly/"
+    command: "npx goalbuddy board /Users/oussmustaine/Documents/invoicer/docs/goals/invoicely-cli-agent-friendly"
+  github_projects:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy extend github-projects"
+    missing: []
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "Map the reference Invoicely project features, workflows, data model, and likely CLI parity targets."
+    inputs:
+      - "https://github.com/legions-developer/invoicely"
+      - "Original request and intake facts in goal.md."
+    constraints:
+      - "Read-only."
+      - "Use primary source evidence from the reference repository."
+      - "Do not implement."
+    expected_output:
+      - "Feature/workflow map."
+      - "Data and persistence model observations."
+      - "Candidate CLI parity commands."
+      - "Risks or gaps that need local repo evidence."
+    receipt:
+      result: done
+      note: notes/T001-reference-invoicely-map.md
+      summary: "Mapped reference Invoicely features, invoice data model, storage paths, PDF/export workflows, asset handling, and candidate agent-friendly CLI parity commands."
+      evidence:
+        - "https://github.com/legions-developer/invoicely"
+        - "/tmp/invoicely-reference/README.md"
+        - "/tmp/invoicely-reference/apps/web/src/zod-schemas/invoice/create-invoice.ts"
+        - "/tmp/invoicely-reference/packages/db/src/schema/invoice.ts"
+        - "/tmp/invoicely-reference/apps/web/src/trpc/services/invoice"
+        - "/tmp/invoicely-reference/apps/web/src/lib/indexdb-queries/invoice.ts"
+        - "/tmp/invoicely-reference/apps/web/src/app/(dashboard)/create/invoice"
+      spawned_tasks:
+        - T002
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "Map the local invoicer repo architecture, current behavior, verification commands, and safe implementation surfaces."
+    inputs:
+      - "Local repository root."
+      - "T001 receipt when available."
+      - "AGENTS.md instruction: always commit in small batches."
+    constraints:
+      - "Read-only."
+      - "Do not implement."
+      - "Prefer concrete file-path evidence."
+    expected_output:
+      - "Local repo architecture map."
+      - "Existing CLI/web/backend/persistence surfaces."
+      - "Verification commands and current health."
+      - "Candidate allowed file groups for implementation."
+    receipt:
+      result: done
+      summary: "Local repo has no implementation files yet; only GoalBuddy control files are present. There is no package manager, app structure, CLI, tests, or existing invoice model to preserve."
+      evidence:
+        - "/Users/oussmustaine/Documents/invoicer/docs/goals/invoicely-cli-agent-friendly/goal.md"
+        - "/Users/oussmustaine/Documents/invoicer/docs/goals/invoicely-cli-agent-friendly/state.yaml"
+        - "git status: no commits yet on master; only docs/ is untracked"
+      verification_commands:
+        - "rg --files -g '!node_modules' -g '!dist' -g '!build' -g '!.next'"
+        - "find . -maxdepth 3 -type f -name package.json -o -name tsconfig.json -o -name README*"
+      spawned_tasks:
+        - T003
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Choose the first coherent implementation milestone that advances reference parity and agent handoff proof."
+    inputs:
+      - "T001 receipt."
+      - "T002 receipt."
+      - "Original request and intake facts in goal.md."
+    constraints:
+      - "Do not implement."
+      - "Select the largest safe useful slice, not a tiny helper."
+      - "Full product path is allowed only when evidence shows it is needed."
+      - "Require small-batch commit boundaries in the implementation plan."
+    expected_output:
+      - "Decision and rationale."
+      - "Exact Worker objective."
+      - "allowed_files."
+      - "verify commands."
+      - "stop_if conditions."
+      - "Commit batch guidance."
+      - "Whether a companion Codex skill belongs in this milestone or should follow."
+    receipt:
+      result: done
+      decision: "approved"
+      full_outcome_complete: false
+      rationale: "The local repo is blank, so the first coherent milestone should establish a runnable agent-friendly CLI core and handoff contract rather than trying to wire server/web parity that has no local substrate yet."
+      exact_worker_objective: "Bootstrap a dependency-light Node CLI named invoicer with canonical invoice JSON scaffolding, validation, total calculation, local JSON-backed invoice CRUD/status commands, local asset registry commands, HTML rendering, tests, README guidance, agent handoff docs, and a companion Codex skill."
+      allowed_files:
+        - "package.json"
+        - "README.md"
+        - "src/**"
+        - "test/**"
+        - "examples/**"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/**"
+        - "docs/goals/invoicely-cli-agent-friendly/**"
+      verify:
+        - "npm test"
+        - "node src/cli.js schema --json"
+        - "node src/cli.js invoice init --json"
+        - "node src/cli.js invoice validate examples/invoice.sample.json --json"
+        - "node src/cli.js invoice total examples/invoice.sample.json --json"
+      stop_if:
+        - "Need files outside allowed_files."
+        - "A package install or external service becomes required."
+        - "PDF/PNG parity requires browser or native rendering dependencies."
+        - "Verification fails twice for the same reason."
+      commit_batch_guidance:
+        - "Commit scaffold and core CLI after tests pass."
+        - "Commit docs/skill handoff as a separate verified batch if practical."
+      companion_skill_decision: "Include a small companion skill in this milestone because the user's proof target is agent handoff."
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Bootstrap a dependency-light Node CLI named invoicer with canonical invoice JSON scaffolding, validation, total calculation, local JSON-backed invoice CRUD/status commands, local asset registry commands, HTML rendering, tests, README guidance, agent handoff docs, and a companion Codex skill."
+    allowed_files:
+      - "package.json"
+      - "README.md"
+      - "src/**"
+      - "test/**"
+      - "examples/**"
+      - "docs/agent-handoff.md"
+      - "skills/invoicer-cli/**"
+      - "docs/goals/invoicely-cli-agent-friendly/**"
+    verify:
+      - "npm test"
+      - "node src/cli.js schema --json"
+      - "node src/cli.js invoice init --json"
+      - "node src/cli.js invoice validate examples/invoice.sample.json --json"
+      - "node src/cli.js invoice total examples/invoice.sample.json --json"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior or parity target is ambiguous."
+      - "Verification fails twice for the same reason."
+      - "A required destructive operation, credential, or external production access is needed."
+    constraints:
+      - "Commit in small batches after verified coherent changes when committing is appropriate."
+      - "Preserve unrelated user changes."
+      - "Keep agent-facing behavior deterministic and documented."
+    expected_output:
+      - "Implemented milestone."
+      - "Agent-facing command/docs/spec or skill handoff evidence."
+      - "Verification results."
+      - "Small-batch commit status or explanation if not committed."
+    receipt:
+      result: done
+      changed_files:
+        - "package.json"
+        - "README.md"
+        - "src/cli.js"
+        - "src/errors.js"
+        - "src/io.js"
+        - "src/render.js"
+        - "src/schema.js"
+        - "src/storage.js"
+        - "examples/invoice.sample.json"
+        - "test/cli.test.js"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+      commands:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js schema --json"
+          status: pass
+        - cmd: "node src/cli.js invoice init --json"
+          status: pass
+        - cmd: "node src/cli.js invoice validate examples/invoice.sample.json --json"
+          status: pass
+        - cmd: "node src/cli.js invoice total examples/invoice.sample.json --json"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      commits:
+        - "47764c2 feat: bootstrap agent-friendly invoicer cli"
+      summary: "Bootstrapped the invoicer Node CLI with schema export, invoice init/validate/total/render/create/list/get/edit/delete/status commands, local asset registry commands, sample fixture, node:test coverage, README, agent handoff doc, and companion skill."
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Review the first milestone for parity direction, agent handoff usefulness, and whether more implementation slices are required."
+    inputs:
+      - "T001-T004 receipts."
+      - "Current dirty diff."
+      - "Last verification."
+    constraints:
+      - "Do not implement."
+      - "Do not call the full outcome complete unless another agent could continue without guessing and required Worker work is not still queued."
+    expected_output:
+      - "approved | needs_changes | blocked."
+      - "full_outcome_complete: true | false."
+      - "Missing proof or defects."
+      - "Next Worker objective with allowed_files and verify commands if not complete."
+    receipt:
+      result: done
+      decision: "needs_follow_up"
+      full_outcome_complete: false
+      rationale: "The CLI core and skill handoff are usable, but the reference product's central workflow includes downloading invoices as documents. HTML rendering is useful for agents, yet a CLI version should support at least PDF output before final audit."
+      approved_next_worker:
+        id: T006
+        objective: "Add dependency-free PDF rendering support to `invoice render` while preserving the existing HTML contract and agent handoff docs."
+        allowed_files:
+          - "src/cli.js"
+          - "src/render.js"
+          - "test/cli.test.js"
+          - "README.md"
+          - "docs/agent-handoff.md"
+          - "skills/invoicer-cli/SKILL.md"
+          - "docs/goals/invoicely-cli-agent-friendly/**"
+        verify:
+          - "npm test"
+          - "node src/cli.js invoice render examples/invoice.sample.json --format pdf --out /tmp/invoicer-sample.pdf --json"
+          - "test -s /tmp/invoicer-sample.pdf"
+      missing_proof:
+        - "PDF render command parity."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add dependency-free PDF rendering support to `invoice render` while preserving the existing HTML contract and agent handoff docs."
+    allowed_files:
+      - "src/cli.js"
+      - "src/render.js"
+      - "test/cli.test.js"
+      - "README.md"
+      - "docs/agent-handoff.md"
+      - "skills/invoicer-cli/SKILL.md"
+      - "docs/goals/invoicely-cli-agent-friendly/**"
+    verify:
+      - "npm test"
+      - "node src/cli.js invoice render examples/invoice.sample.json --format pdf --out /tmp/invoicer-sample.pdf --json"
+      - "test -s /tmp/invoicer-sample.pdf"
+    stop_if:
+      - "Need external PDF dependencies."
+      - "Need files outside allowed_files."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "Keep the PDF implementation deterministic and dependency-free."
+      - "Preserve existing HTML rendering behavior and JSON output shape."
+      - "Commit this as a separate verified batch."
+    expected_output:
+      - "PDF render support."
+      - "Tests covering PDF output."
+      - "Updated agent handoff docs and skill."
+      - "Verification results and commit hash."
+    receipt:
+      result: done
+      changed_files:
+        - "src/cli.js"
+        - "src/render.js"
+        - "test/cli.test.js"
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+      commands:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js invoice render examples/invoice.sample.json --format pdf --out /tmp/invoicer-sample.pdf --json"
+          status: pass
+        - cmd: "test -s /tmp/invoicer-sample.pdf"
+          status: pass
+        - cmd: "file /tmp/invoicer-sample.pdf"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      commits:
+        - "64b4be0 feat: add pdf invoice rendering"
+      summary: "Added deterministic dependency-free PDF output to `invoice render --format pdf`, preserved HTML rendering, expanded tests to cover PDF output, and updated agent handoff docs/skill."
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Final audit: prove whether the full original outcome is complete."
+    inputs:
+      - "All done task receipts."
+      - "Last verification."
+      - "Current dirty diff."
+      - "Agent handoff evidence."
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the result is only discovery with no usable agent handoff proof."
+      - "Reject completion if required Worker work is still queued or active."
+      - "Map completion explicitly to the original request."
+    expected_output:
+      - "complete | not_complete."
+      - "full_outcome_complete: true | false."
+      - "Evidence that another agent can inspect, run or verify, and continue without guessing."
+      - "Next task if not complete."
+    receipt:
+      result: done
+      decision: "complete"
+      full_outcome_complete: true
+      summary: "The goal is complete for the requested tranche: the reference project was mapped, a CLI version was implemented from the blank local repo, and an agent handoff surface exists through README docs, docs/agent-handoff.md, examples, tests, JSON command contracts, and skills/invoicer-cli/SKILL.md."
+      completion_mapping:
+        original_request: "Make a CLI version of legions-developer/invoicely while making it agent friendly, maybe CLI plus skill."
+        reference_parity_discovery: "T001 mapped Invoicely create/edit/list/delete/status/migration/assets/PDF workflows and the canonical invoice data model."
+        cli_version: "T004 and T006 implemented schema, invoice init/validate/total/create/list/get/edit/delete/status/render, local asset upload/list/delete, HTML render, and PDF render."
+        agent_friendly: "All automation paths support --json, stable exit codes, structured validation issues, fixtures, tests, agent handoff docs, and a companion skill."
+      evidence:
+        - "README.md"
+        - "docs/agent-handoff.md"
+        - "skills/invoicer-cli/SKILL.md"
+        - "examples/invoice.sample.json"
+        - "test/cli.test.js"
+        - "src/cli.js"
+        - "docs/goals/invoicely-cli-agent-friendly/notes/T001-reference-invoicely-map.md"
+      verification:
+        - cmd: "npm test"
+          status: pass
+        - cmd: "node src/cli.js schema --json"
+          status: pass
+        - cmd: "node src/cli.js invoice validate examples/invoice.sample.json --json"
+          status: pass
+        - cmd: "node src/cli.js invoice total examples/invoice.sample.json --json"
+          status: pass
+        - cmd: "node src/cli.js invoice render examples/invoice.sample.json --format pdf --out /tmp/invoicer-final.pdf --json"
+          status: pass
+        - cmd: "file /tmp/invoicer-final.pdf"
+          status: pass
+        - cmd: "node src/cli.js invoice render examples/invoice.sample.json --format html --out /tmp/invoicer-final.html --json"
+          status: pass
+        - cmd: "git diff --check"
+          status: pass
+      residual_gaps:
+        - "PNG rendering, server-backed auth/database storage, Cloudflare R2, and a web dashboard remain future parity extensions, not blockers for this CLI-plus-agent-handoff tranche."
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: pass
+    task: T999
+    commands:
+      - "npm test"
+      - "node src/cli.js schema --json"
+      - "node src/cli.js invoice validate examples/invoice.sample.json --json"
+      - "node src/cli.js invoice total examples/invoice.sample.json --json"
+      - "node src/cli.js invoice render examples/invoice.sample.json --format pdf --out /tmp/invoicer-final.pdf --json"
+      - "file /tmp/invoicer-final.pdf"
+      - "node src/cli.js invoice render examples/invoice.sample.json --format html --out /tmp/invoicer-final.html --json"
+      - "git diff --check"
