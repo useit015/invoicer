@@ -14,6 +14,7 @@ node src/cli.js config get --json
 node src/cli.js theme list --json
 node src/cli.js client create --name "Acme Co" --email billing@acme.example --json
 node src/cli.js item create --name "Consulting" --unit-price 125 --json
+node src/cli.js invoice compose --client <client-id> --item <item-id-or-sku:2> --out .invoicer/composed.json --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
 node src/cli.js invoice render examples/invoice.sample.json --format html --theme executive --out .invoicer/sample.html --json
@@ -74,6 +75,7 @@ Invoices:
 
 ```bash
 node src/cli.js invoice init --out .invoicer/new-invoice.json --json
+node src/cli.js invoice compose --client <client-id> --item CONSULT:2 --company-name "Northstar Studio" --out .invoicer/composed.json --json
 node src/cli.js invoice init --theme studio --base-color "#e0523f" --out .invoicer/studio.json --json
 node src/cli.js invoice create examples/invoice.sample.json --store .invoicer/invoices.json --json
 node src/cli.js invoice list --store .invoicer/invoices.json --json
@@ -98,6 +100,12 @@ node src/cli.js data export --out .invoicer/backup.json --json
 node src/cli.js data import .invoicer/backup.json --json
 ```
 
+Reports:
+
+```bash
+node src/cli.js report summary --store .invoicer/invoices.json --json
+```
+
 ## Agent Contract
 
 All commands support `--json`. Validation failures exit with code `2` and include field-level `issues`. Other command failures exit with code `1` and include a stable error `code`.
@@ -112,5 +120,6 @@ The CLI entrypoint is intentionally thin:
 
 - `src/cli.js` parses top-level commands and dispatches to command modules.
 - `src/commands/` contains workflow commands for invoices, themes, assets, config, clients, catalog items, and data backup.
+- `src/commands/report.js` summarizes stored invoices for quick operational review.
 - `src/storage.js` owns local JSON stores and import/export.
 - `src/schema.js`, `src/themes.js`, and `src/render.js` own invoice contracts and output generation.

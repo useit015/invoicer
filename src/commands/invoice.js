@@ -7,7 +7,9 @@ import {
   createInvoice,
   deleteInvoice,
   editInvoice,
+  getCatalogItem,
   getConfig,
+  getClient,
   getInvoice,
   listInvoices,
   updateInvoiceStatus,
@@ -34,6 +36,45 @@ export async function invoiceCommand(args, opts) {
       if (opts.out) {
         await writeJsonFile(resolveFromCwd(opts.out), invoice);
       }
+      return output({ ok: true, invoice, outputPath: opts.out ? resolveFromCwd(opts.out) : null }, opts);
+    }
+
+    case "compose": {
+      requireArg(opts.client, "--client");
+      requireArg(opts.item, "--item");
+      const config = await getConfig(configOptions(opts));
+      const themeName = opts.theme ?? opts.template ?? config.defaults.theme;
+      assertThemeName(themeName);
+      const client = await getClient(opts.client, clientStoreOptions(opts));
+      const itemRefs = Array.isArray(opts.item) ? opts.item : [opts.item];
+      const items = await Promise.all(itemRefs.map((reference) => resolveCatalogItem(reference, opts)));
+      const invoice = createDefaultInvoice(new Date(), {
+        theme: themeName,
+        currency: opts.currency ?? config.defaults.currency,
+        baseColor: opts.baseColor,
+      });
+
+      invoice.companyDetails.name = opts.companyName ?? invoice.companyDetails.name;
+      invoice.companyDetails.address = opts.companyAddress ?? invoice.companyDetails.address;
+      invoice.clientDetails = {
+        name: client.name,
+        address: client.address,
+        metadata: [
+          ...(client.email ? [{ label: "Email", value: client.email }] : []),
+          ...(client.phone ? [{ label: "Phone", value: client.phone }] : []),
+          ...client.metadata,
+        ],
+      };
+      invoice.invoiceDetails.prefix = opts.prefix ?? invoice.invoiceDetails.prefix;
+      invoice.invoiceDetails.serialNumber = opts.serial ?? invoice.invoiceDetails.serialNumber;
+      invoice.invoiceDetails.paymentTerms = opts.paymentTerms ?? invoice.invoiceDetails.paymentTerms;
+      invoice.invoiceDetails.dueDate = opts.dueDate ?? invoice.invoiceDetails.dueDate;
+      invoice.items = items;
+
+      if (opts.out) {
+        await writeJsonFile(resolveFromCwd(opts.out), invoice);
+      }
+
       return output({ ok: true, invoice, outputPath: opts.out ? resolveFromCwd(opts.out) : null }, opts);
     }
 
@@ -151,4 +192,29 @@ function configOptions(opts) {
 
 function invoiceStoreOptions(opts) {
   return opts.store ? { storePath: resolveFromCwd(opts.store) } : {};
+}
+
+function clientStoreOptions(opts) {
+  return opts.clientStore ? { storePath: resolveFromCwd(opts.clientStore) } : {};
+}
+
+function itemStoreOptions(opts) {
+  return opts.itemStore ? { storePath: resolveFromCwd(opts.itemStore) } : {};
+}
+
+async function resolveCatalogItem(reference, opts) {
+  const [idOrSku, quantityRaw] = reference.split(":");
+  const item = await getCatalogItem(idOrSku, itemStoreOptions(opts));
+  const quantity = quantityRaw === undefined ? 1 : Number(quantityRaw);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new CliError("invalid_quantity", `Invalid quantity in item reference: ${reference}`);
+  }
+
+  return {
+    name: item.name,
+    description: item.description,
+    quantity,
+    unitPrice: item.unitPrice,
+  };
 }

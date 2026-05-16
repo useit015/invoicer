@@ -29,6 +29,7 @@ If tests fail, stop and fix the CLI before relying on generated invoice data.
 ```bash
 node src/cli.js client create --name "Acme Co" --email billing@acme.example --json
 node src/cli.js item create --name "Consulting" --unit-price 125 --json
+node src/cli.js invoice compose --client <client-id> --item <item-id-or-sku:2> --out .invoicer/composed.json --json
 ```
 
 3. Validate it:
@@ -55,6 +56,7 @@ node src/cli.js invoice render path/to/invoice.json --format pdf --theme executi
 ```bash
 node src/cli.js invoice create path/to/invoice.json --store .invoicer/agent-run.json --json
 node src/cli.js invoice list --store .invoicer/agent-run.json --json
+node src/cli.js report summary --store .invoicer/agent-run.json --json
 node src/cli.js data export --store .invoicer/agent-run.json --out .invoicer/agent-backup.json --json
 ```
 

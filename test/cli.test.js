@@ -216,6 +216,77 @@ test("data export and import round-trip all local stores", () => {
   assert.equal(imported.imported.items, 1);
 });
 
+test("invoice compose uses saved clients and catalog items", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-compose-"));
+  const clientStore = path.join(dir, "clients.json");
+  const itemStore = path.join(dir, "items.json");
+  const out = path.join(dir, "composed.json");
+  const client = runJson([
+    "client",
+    "create",
+    "--name",
+    "Acme Co",
+    "--email",
+    "billing@acme.example",
+    "--address",
+    "44 Client Ave",
+    "--client-store",
+    clientStore,
+  ]);
+  runJson([
+    "item",
+    "create",
+    "--sku",
+    "CONSULT",
+    "--name",
+    "Consulting",
+    "--description",
+    "Hourly work",
+    "--unit-price",
+    "125",
+    "--item-store",
+    itemStore,
+  ]);
+
+  const composed = runJson([
+    "invoice",
+    "compose",
+    "--client",
+    client.client.id,
+    "--item",
+    "CONSULT:2",
+    "--client-store",
+    clientStore,
+    "--item-store",
+    itemStore,
+    "--company-name",
+    "Northstar Studio",
+    "--out",
+    out,
+  ]);
+  const validation = runJson(["invoice", "validate", out]);
+
+  assert.equal(composed.invoice.clientDetails.name, "Acme Co");
+  assert.equal(composed.invoice.companyDetails.name, "Northstar Studio");
+  assert.equal(composed.invoice.items[0].quantity, 2);
+  assert.equal(composed.invoice.items[0].unitPrice, 125);
+  assert.equal(validation.valid, true);
+});
+
+test("report summary aggregates stored invoices", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-report-"));
+  const store = path.join(dir, "invoices.json");
+  const created = runJson(["invoice", "create", sample, "--store", store]);
+  runJson(["invoice", "status", created.invoice.id, "success", "--store", store]);
+  const report = runJson(["report", "summary", "--store", store]);
+
+  assert.equal(report.report.invoiceCount, 1);
+  assert.equal(report.report.total, 387.5);
+  assert.equal(report.report.paid, 387.5);
+  assert.equal(report.report.outstanding, 0);
+  assert.equal(report.report.byStatus.success.count, 1);
+});
+
 test("invoice render writes HTML output", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "invoicer-render-"));
   const out = path.join(dir, "invoice.html");

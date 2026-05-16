@@ -21,6 +21,7 @@ Usage:
   invoicer item delete <id> --json
 
   invoicer invoice init [--theme name] [--currency USD] [--out invoice.json] --json
+  invoicer invoice compose --client <id> --item <id-or-sku[:qty]> [--out invoice.json] --json
   invoicer invoice validate <invoice.json> --json
   invoicer invoice total <invoice.json> --json
   invoicer invoice render <invoice.json> --format html|pdf [--theme name] --out invoice.html --json
@@ -37,5 +38,7 @@ Usage:
 
   invoicer data export --out backup.json --json
   invoicer data import backup.json --json
+
+  invoicer report summary --json
 `);
 }

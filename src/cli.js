@@ -5,6 +5,7 @@ import { configCommand } from "./commands/config.js";
 import { dataCommand } from "./commands/data.js";
 import { invoiceCommand } from "./commands/invoice.js";
 import { itemCommand } from "./commands/item.js";
+import { reportCommand } from "./commands/report.js";
 import { themeCommand } from "./commands/theme.js";
 import { handleError, output, parseArgv } from "./command-utils.js";
 import { printHelp } from "./help.js";
@@ -36,6 +37,7 @@ async function main(commandName, args, opts) {
     data: dataCommand,
     invoice: invoiceCommand,
     item: itemCommand,
+    report: reportCommand,
     theme: themeCommand,
   };
 
