@@ -3,11 +3,35 @@
   "version": "0.1.0",
   "description": "Agent-friendly CLI for creating, validating, storing, and rendering invoices inspired by Invoicely.",
   "type": "module",
+  "keywords": [
+    "invoice",
+    "cli",
+    "invoicing",
+    "agent-friendly",
+    "pdf"
+  ],
+  "homepage": "https://github.com/useit015/invoicer#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/useit015/invoicer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/useit015/invoicer/issues"
+  },
+  "files": [
+    "src",
+    "examples",
+    "docs/agent-handoff.md",
+    "skills",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "bin": {
     "invoicer": "./src/cli.js"
   },
   "scripts": {
     "test": "node --test",
+    "pack:check": "npm pack --dry-run",
     "invoicer": "node src/cli.js"
   },
   "engines": {

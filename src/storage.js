@@ -6,6 +6,9 @@ import { STATUS_VALUES, summarizeInvoiceRecord } from "./schema.js";
 
 const STORE_VERSION = 1;
 const ASSET_VERSION = 1;
+const CONFIG_VERSION = 1;
+const CLIENT_VERSION = 1;
+const ITEM_VERSION = 1;
 
 export function defaultInvoiceStorePath() {
   return path.resolve(process.cwd(), ".invoicer", "invoices.json");
@@ -13,6 +16,62 @@ export function defaultInvoiceStorePath() {
 
 export function defaultAssetStorePath() {
   return path.resolve(process.cwd(), ".invoicer", "assets.json");
+}
+
+export function defaultConfigStorePath() {
+  return path.resolve(process.cwd(), ".invoicer", "config.json");
+}
+
+export function defaultClientStorePath() {
+  return path.resolve(process.cwd(), ".invoicer", "clients.json");
+}
+
+export function defaultItemStorePath() {
+  return path.resolve(process.cwd(), ".invoicer", "items.json");
+}
+
+export function defaultConfig() {
+  return {
+    version: CONFIG_VERSION,
+    defaults: {
+      currency: "USD",
+      theme: "default",
+      invoiceStore: defaultInvoiceStorePath(),
+      assetStore: defaultAssetStorePath(),
+      clientStore: defaultClientStorePath(),
+      itemStore: defaultItemStorePath(),
+    },
+  };
+}
+
+export async function getConfig(options = {}) {
+  const configPath = options.configPath ?? defaultConfigStorePath();
+  const config = await loadJsonStore(configPath, defaultConfig());
+
+  return {
+    ...defaultConfig(),
+    ...config,
+    defaults: {
+      ...defaultConfig().defaults,
+      ...(config.defaults ?? {}),
+    },
+  };
+}
+
+export async function setConfigValue(key, value, options = {}) {
+  const configPath = options.configPath ?? defaultConfigStorePath();
+  const config = await getConfig({ configPath });
+
+  if (!Object.hasOwn(config.defaults, key)) {
+    throw new CliError("unknown_config_key", `Unknown config key: ${key}`, {
+      availableKeys: Object.keys(config.defaults),
+    });
+  }
+
+  config.defaults[key] = value;
+  await writeJsonStore(configPath, config);
+
+  return config;
 }
 
 export async function createInvoice(invoice, options = {}) {
@@ -166,6 +225,148 @@ export async function deleteAsset(id, options = {}) {
   return sanitizeAsset(deleted);
 }
 
+export async function createClient(client, options = {}) {
+  const storePath = options.storePath ?? defaultClientStorePath();
+  const store = await loadClientStore(storePath);
+  const now = new Date().toISOString();
+  const record = {
+    id: randomUUID(),
+    name: client.name,
+    email: client.email ?? "",
+    address: client.address ?? "",
+    phone: client.phone ?? "",
+    metadata: client.metadata ?? [],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  store.clients.push(record);
+  await saveClientStore(storePath, store);
+
+  return record;
+}
+
+export async function listClients(options = {}) {
+  const store = await loadClientStore(options.storePath ?? defaultClientStorePath());
+  return store.clients;
+}
+
+export async function getClient(id, options = {}) {
+  const store = await loadClientStore(options.storePath ?? defaultClientStorePath());
+  const client = store.clients.find((record) => record.id === id);
+
+  if (!client) {
+    throw new CliError("client_not_found", `Client ${id} was not found.`);
+  }
+
+  return client;
+}
+
+export async function deleteClient(id, options = {}) {
+  const storePath = options.storePath ?? defaultClientStorePath();
+  const store = await loadClientStore(storePath);
+  const index = store.clients.findIndex((record) => record.id === id);
+
+  if (index === -1) {
+    throw new CliError("client_not_found", `Client ${id} was not found.`);
+  }
+
+  const [deleted] = store.clients.splice(index, 1);
+  await saveClientStore(storePath, store);
+
+  return deleted;
+}
+
+export async function createCatalogItem(item, options = {}) {
+  const storePath = options.storePath ?? defaultItemStorePath();
+  const store = await loadItemStore(storePath);
+  const now = new Date().toISOString();
+  const record = {
+    id: randomUUID(),
+    sku: item.sku ?? "",
+    name: item.name,
+    description: item.description ?? "",
+    unitPrice: item.unitPrice,
+    currency: item.currency ?? "USD",
+    metadata: item.metadata ?? [],
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  store.items.push(record);
+  await saveItemStore(storePath, store);
+
+  return record;
+}
+
+export async function listCatalogItems(options = {}) {
+  const store = await loadItemStore(options.storePath ?? defaultItemStorePath());
+  return store.items;
+}
+
+export async function getCatalogItem(id, options = {}) {
+  const store = await loadItemStore(options.storePath ?? defaultItemStorePath());
+  const item = store.items.find((record) => record.id === id || record.sku === id);
+
+  if (!item) {
+    throw new CliError("item_not_found", `Item ${id} was not found.`);
+  }
+
+  return item;
+}
+
+export async function deleteCatalogItem(id, options = {}) {
+  const storePath = options.storePath ?? defaultItemStorePath();
+  const store = await loadItemStore(storePath);
+  const index = store.items.findIndex((record) => record.id === id || record.sku === id);
+
+  if (index === -1) {
+    throw new CliError("item_not_found", `Item ${id} was not found.`);
+  }
+
+  const [deleted] = store.items.splice(index, 1);
+  await saveItemStore(storePath, store);
+
+  return deleted;
+}
+
+export async function exportData(options = {}) {
+  const config = await getConfig({ configPath: options.configPath });
+
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    config,
+    invoices: await loadInvoiceStore(options.invoiceStorePath ?? config.defaults.invoiceStore),
+    assets: await loadAssetStore(options.assetStorePath ?? config.defaults.assetStore),
+    clients: await loadClientStore(options.clientStorePath ?? config.defaults.clientStore),
+    items: await loadItemStore(options.itemStorePath ?? config.defaults.itemStore),
+  };
+}
+
+export async function importData(data, options = {}) {
+  if (!data || typeof data !== "object") {
+    throw new CliError("invalid_import", "Import data must be an object.");
+  }
+
+  const config = await getConfig({ configPath: options.configPath });
+  await saveInvoiceStore(options.invoiceStorePath ?? config.defaults.invoiceStore, data.invoices ?? { invoices: [] });
+  await saveAssetStore(options.assetStorePath ?? config.defaults.assetStore, data.assets ?? { assets: [] });
+  await saveClientStore(options.clientStorePath ?? config.defaults.clientStore, data.clients ?? { clients: [] });
+  await saveItemStore(options.itemStorePath ?? config.defaults.itemStore, data.items ?? { items: [] });
+
+  if (data.config && options.importConfig) {
+    await writeJsonStore(options.configPath ?? defaultConfigStorePath(), data.config);
+  }
+
+  return {
+    invoices: (data.invoices?.invoices ?? []).length,
+    assets: (data.assets?.assets ?? []).length,
+    clients: (data.clients?.clients ?? []).length,
+    items: (data.items?.items ?? []).length,
+  };
+}
+
 async function loadInvoiceStore(storePath) {
   const store = await loadJsonStore(storePath, { version: STORE_VERSION, invoices: [] });
 
@@ -197,6 +398,40 @@ async function saveAssetStore(storePath, store) {
   await writeJsonStore(storePath, {
     version: ASSET_VERSION,
     assets: store.assets,
+  });
+}
+
+async function loadClientStore(storePath) {
+  const store = await loadJsonStore(storePath, { version: CLIENT_VERSION, clients: [] });
+
+  if (!Array.isArray(store.clients)) {
+    throw new CliError("invalid_store", `${storePath} does not contain a clients array.`);
+  }
+
+  return store;
+}
+
+async function saveClientStore(storePath, store) {
+  await writeJsonStore(storePath, {
+    version: CLIENT_VERSION,
+    clients: store.clients,
+  });
+}
+
+async function loadItemStore(storePath) {
+  const store = await loadJsonStore(storePath, { version: ITEM_VERSION, items: [] });
+
+  if (!Array.isArray(store.items)) {
+    throw new CliError("invalid_store", `${storePath} does not contain an items array.`);
+  }
+
+  return store;
+}
+
+async function saveItemStore(storePath, store) {
+  await writeJsonStore(storePath, {
+    version: ITEM_VERSION,
+    items: store.items,
   });
 }
 

@@ -103,6 +103,119 @@ test("local invoice lifecycle supports create list get status edit and delete", 
   assert.equal(empty.count, 0);
 });
 
+test("config supports get and set defaults", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-config-"));
+  const config = path.join(dir, "config.json");
+
+  const before = runJson(["config", "get", "--config", config]);
+  assert.equal(before.config.defaults.currency, "USD");
+
+  const updated = runJson(["config", "set", "currency", "EUR", "--config", config]);
+  assert.equal(updated.config.defaults.currency, "EUR");
+
+  const invoice = runJson(["invoice", "init", "--config", config]);
+  assert.equal(invoice.invoice.invoiceDetails.currency, "EUR");
+});
+
+test("client workflow supports create list get and delete", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-clients-"));
+  const clientStore = path.join(dir, "clients.json");
+  const created = runJson([
+    "client",
+    "create",
+    "--name",
+    "Acme Co",
+    "--email",
+    "billing@acme.example",
+    "--field",
+    "VAT=EU123",
+    "--client-store",
+    clientStore,
+  ]);
+
+  assert.equal(created.client.name, "Acme Co");
+  assert.deepEqual(created.client.metadata, [{ label: "VAT", value: "EU123" }]);
+
+  const listed = runJson(["client", "list", "--client-store", clientStore]);
+  assert.equal(listed.count, 1);
+
+  const fetched = runJson(["client", "get", created.client.id, "--client-store", clientStore]);
+  assert.equal(fetched.client.email, "billing@acme.example");
+
+  const deleted = runJson(["client", "delete", created.client.id, "--client-store", clientStore]);
+  assert.equal(deleted.client.id, created.client.id);
+});
+
+test("item catalog supports create list get and delete", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-items-"));
+  const itemStore = path.join(dir, "items.json");
+  const created = runJson([
+    "item",
+    "create",
+    "--sku",
+    "CONSULT",
+    "--name",
+    "Consulting",
+    "--description",
+    "Hourly consulting",
+    "--unit-price",
+    "125",
+    "--item-store",
+    itemStore,
+  ]);
+
+  assert.equal(created.item.sku, "CONSULT");
+  assert.equal(created.item.unitPrice, 125);
+
+  const listed = runJson(["item", "list", "--item-store", itemStore]);
+  assert.equal(listed.count, 1);
+
+  const fetched = runJson(["item", "get", "CONSULT", "--item-store", itemStore]);
+  assert.equal(fetched.item.name, "Consulting");
+
+  const deleted = runJson(["item", "delete", "CONSULT", "--item-store", itemStore]);
+  assert.equal(deleted.item.id, created.item.id);
+});
+
+test("data export and import round-trip all local stores", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "invoicer-data-"));
+  const store = path.join(dir, "invoices.json");
+  const clientStore = path.join(dir, "clients.json");
+  const itemStore = path.join(dir, "items.json");
+  const assetStore = path.join(dir, "assets.json");
+  const out = path.join(dir, "backup.json");
+  const importStore = path.join(dir, "imported-invoices.json");
+
+  runJson(["invoice", "create", sample, "--store", store]);
+  runJson(["client", "create", "--name", "Acme Co", "--client-store", clientStore]);
+  runJson(["item", "create", "--name", "Consulting", "--unit-price", "125", "--item-store", itemStore]);
+
+  const exported = runJson([
+    "data",
+    "export",
+    "--store",
+    store,
+    "--client-store",
+    clientStore,
+    "--item-store",
+    itemStore,
+    "--asset-store",
+    assetStore,
+    "--out",
+    out,
+  ]);
+
+  assert.equal(exported.outputPath, out);
+  assert.equal(exported.data.invoices.invoices.length, 1);
+  assert.equal(exported.data.clients.clients.length, 1);
+  assert.equal(exported.data.items.items.length, 1);
+
+  const imported = runJson(["data", "import", out, "--store", importStore]);
+  assert.equal(imported.imported.invoices, 1);
+  assert.equal(imported.imported.clients, 1);
+  assert.equal(imported.imported.items, 1);
+});
+
 test("invoice render writes HTML output", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "invoicer-render-"));
   const out = path.join(dir, "invoice.html");

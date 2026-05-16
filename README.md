@@ -2,14 +2,18 @@
 
 Agent-friendly invoice CLI inspired by [`legions-developer/invoicely`](https://github.com/legions-developer/invoicely).
 
-This app focuses on the parts an agent can operate safely from a terminal: a canonical invoice JSON contract, validation, total calculation, local JSON-backed invoice records, local asset registry commands, professional invoice themes, HTML/PDF rendering, tests, and handoff documentation.
+This app focuses on the parts an agent can operate safely from a terminal: a canonical invoice JSON contract, validation, total calculation, local JSON-backed invoice records, reusable clients, reusable catalog items, config defaults, import/export backups, local asset registry commands, professional invoice themes, HTML/PDF rendering, tests, package checks, and handoff documentation.
 
 ## Quick Start
 
 ```bash
 npm test
+npm run pack:check
 node src/cli.js schema --json
+node src/cli.js config get --json
 node src/cli.js theme list --json
+node src/cli.js client create --name "Acme Co" --email billing@acme.example --json
+node src/cli.js item create --name "Consulting" --unit-price 125 --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
 node src/cli.js invoice render examples/invoice.sample.json --format html --theme executive --out .invoicer/sample.html --json
@@ -40,6 +44,34 @@ node src/cli.js invoice init --theme ledger --currency EUR --out .invoicer/ledge
 
 ## Core Commands
 
+Config:
+
+```bash
+node src/cli.js config get --json
+node src/cli.js config set currency EUR --json
+node src/cli.js config set theme ledger --json
+```
+
+Clients:
+
+```bash
+node src/cli.js client create --name "Acme Co" --email billing@acme.example --address "44 Client Ave" --field "VAT=EU123" --json
+node src/cli.js client list --json
+node src/cli.js client get <id> --json
+node src/cli.js client delete <id> --json
+```
+
+Catalog items:
+
+```bash
+node src/cli.js item create --sku CONSULT --name "Consulting" --description "Hourly consulting" --unit-price 125 --json
+node src/cli.js item list --json
+node src/cli.js item get CONSULT --json
+node src/cli.js item delete CONSULT --json
+```
+
+Invoices:
+
 ```bash
 node src/cli.js invoice init --out .invoicer/new-invoice.json --json
 node src/cli.js invoice init --theme studio --base-color "#e0523f" --out .invoicer/studio.json --json
@@ -59,6 +91,13 @@ node src/cli.js asset list --asset-store .invoicer/assets.json --json
 node src/cli.js asset delete <id> --asset-store .invoicer/assets.json --json
 ```
 
+Data backup:
+
+```bash
+node src/cli.js data export --out .invoicer/backup.json --json
+node src/cli.js data import .invoicer/backup.json --json
+```
+
 ## Agent Contract
 
 All commands support `--json`. Validation failures exit with code `2` and include field-level `issues`. Other command failures exit with code `1` and include a stable error `code`.
@@ -66,3 +105,12 @@ All commands support `--json`. Validation failures exit with code `2` and includ
 Rendering supports deterministic HTML and dependency-free PDF output. Use `--theme <name>` to preview a different theme without mutating the invoice JSON. PNG remains a future parity target.
 
 See [docs/agent-handoff.md](docs/agent-handoff.md) and [skills/invoicer-cli/SKILL.md](skills/invoicer-cli/SKILL.md).
+
+## Architecture
+
+The CLI entrypoint is intentionally thin:
+
+- `src/cli.js` parses top-level commands and dispatches to command modules.
+- `src/commands/` contains workflow commands for invoices, themes, assets, config, clients, catalog items, and data backup.
+- `src/storage.js` owns local JSON stores and import/export.
+- `src/schema.js`, `src/themes.js`, and `src/render.js` own invoice contracts and output generation.

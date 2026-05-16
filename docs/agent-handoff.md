@@ -10,8 +10,12 @@ Run these from the repository root:
 
 ```bash
 npm test
+npm run pack:check
 node src/cli.js schema --json
+node src/cli.js config get --json
 node src/cli.js theme list --json
+node src/cli.js client create --name "Acme Co" --email billing@acme.example --json
+node src/cli.js item create --name "Consulting" --unit-price 125 --json
 node src/cli.js invoice init --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
@@ -30,6 +34,34 @@ The canonical invoice file mirrors the reference Invoicely create flow:
 - `metadata`: notes, terms, and payment information pairs.
 
 Use `node src/cli.js schema --json` for the machine-readable contract and `examples/invoice.sample.json` for a fixture.
+
+## Workflow Stores
+
+The app uses local JSON stores:
+
+- invoices: `.invoicer/invoices.json`
+- assets: `.invoicer/assets.json`
+- clients: `.invoicer/clients.json`
+- catalog items: `.invoicer/items.json`
+- config: `.invoicer/config.json`
+
+Use explicit `--store`, `--asset-store`, `--client-store`, `--item-store`, and `--config` paths in tests or agent runs.
+
+## Business Workflows
+
+Create reusable client and catalog entries:
+
+```bash
+node src/cli.js client create --name "Acme Co" --email billing@acme.example --field "VAT=EU123" --json
+node src/cli.js item create --sku CONSULT --name "Consulting" --unit-price 125 --json
+```
+
+Back up and restore local data:
+
+```bash
+node src/cli.js data export --out .invoicer/backup.json --json
+node src/cli.js data import .invoicer/backup.json --json
+```
 
 ## Themes
 
@@ -70,9 +102,10 @@ Structured errors look like:
 - PNG rendering is not implemented yet; the CLI writes deterministic themed HTML and dependency-free themed PDF.
 - Server-backed storage, authentication, and Cloudflare R2 are not implemented.
 - The web dashboard is not implemented because the local repo started blank.
+- Client and item catalog entries are reusable records; composing invoice JSON directly from them is a future convenience command.
 
 Recommended next slices:
 
-1. Add browser-backed PNG capture behind the existing `invoice render` contract.
-2. Add server/database storage behind the existing storage abstraction.
-3. Add web dashboard parity only after the CLI contract remains stable.
+1. Add `invoice compose` to generate invoice JSON from saved clients and catalog items.
+2. Add browser-backed PNG capture behind the existing `invoice render` contract.
+3. Add server/database storage behind the existing storage abstraction.
