@@ -14,6 +14,7 @@ Run:
 ```bash
 npm test
 node src/cli.js schema --json
+node src/cli.js theme list --json
 ```
 
 If tests fail, stop and fix the CLI before relying on generated invoice data.
@@ -36,8 +37,8 @@ node src/cli.js invoice total path/to/invoice.json --json
 4. Render a reviewable HTML invoice:
 
 ```bash
-node src/cli.js invoice render path/to/invoice.json --format html --out .invoicer/invoice.html --json
-node src/cli.js invoice render path/to/invoice.json --format pdf --out .invoicer/invoice.pdf --json
+node src/cli.js invoice render path/to/invoice.json --format html --theme executive --out .invoicer/invoice.html --json
+node src/cli.js invoice render path/to/invoice.json --format pdf --theme executive --out .invoicer/invoice.pdf --json
 ```
 
 5. Use an explicit store path for automated CRUD:
@@ -52,5 +53,6 @@ node src/cli.js invoice list --store .invoicer/agent-run.json --json
 - Always pass `--json` in automation.
 - Treat exit code `2` as validation failure with actionable `issues`.
 - Use explicit `--store` and `--asset-store` paths in tests or agent runs.
+- Discover themes with `theme list --json`; do not hardcode a theme name before checking the list.
 - Use `--format pdf` for document output and `--format html` for easy inspection.
 - Do not assume PNG support yet.

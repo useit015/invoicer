@@ -8,8 +8,10 @@ import {
   calculateInvoiceTotals,
   createDefaultInvoice,
   invoiceSchemaContract,
+  THEME_MODES,
   validateInvoice,
 } from "./schema.js";
+import { findThemeDefinition, listThemeDefinitions } from "./themes.js";
 import {
   createInvoice,
   deleteAsset,
@@ -44,6 +46,10 @@ async function main(commandName, args, opts) {
     return invoiceCommand(args, opts);
   }
 
+  if (commandName === "theme") {
+    return themeCommand(args, opts);
+  }
+
   if (commandName === "asset") {
     return assetCommand(args, opts);
   }
@@ -56,7 +62,18 @@ async function invoiceCommand(args, opts) {
 
   switch (action) {
     case "init": {
-      const invoice = createDefaultInvoice();
+      const themeName = opts.theme ?? opts.template ?? "default";
+      assertThemeName(themeName);
+      if (opts.mode && !THEME_MODES.includes(opts.mode)) {
+        throw new CliError("invalid_theme_mode", `Theme mode must be one of: ${THEME_MODES.join(", ")}.`);
+      }
+
+      const invoice = createDefaultInvoice(new Date(), {
+        theme: themeName,
+        mode: opts.mode,
+        baseColor: opts.baseColor,
+        currency: opts.currency,
+      });
       if (opts.out) {
         await writeJsonFile(resolveFromCwd(opts.out), invoice);
       }
@@ -80,12 +97,15 @@ async function invoiceCommand(args, opts) {
     case "render": {
       const invoice = await readValidInvoiceArg(args[1]);
       const format = opts.format ?? "html";
+      const renderOptions = { theme: opts.theme ?? opts.template };
+      if (renderOptions.theme) assertThemeName(renderOptions.theme);
+
       if (!["html", "pdf"].includes(format)) {
         throw new CliError("unsupported_format", "Render format must be html or pdf.");
       }
 
       if (format === "pdf") {
-        const pdf = renderInvoicePdf(invoice);
+        const pdf = renderInvoicePdf(invoice, renderOptions);
         if (opts.out) {
           const outputPath = resolveFromCwd(opts.out);
           await writeBinaryFile(outputPath, pdf);
@@ -98,7 +118,7 @@ async function invoiceCommand(args, opts) {
         return;
       }
 
-      const html = renderInvoiceHtml(invoice);
+      const html = renderInvoiceHtml(invoice, renderOptions);
       if (opts.out) {
         await writeTextFile(resolveFromCwd(opts.out), html);
         return output({ ok: true, format, outputPath: resolveFromCwd(opts.out), totals: calculateInvoiceTotals(invoice) }, opts);
@@ -149,6 +169,24 @@ async function invoiceCommand(args, opts) {
 
     default:
       throw new CliError("unknown_invoice_command", `Unknown invoice command: ${action ?? ""}`);
+  }
+}
+
+async function themeCommand(args, opts) {
+  const action = args[0] ?? "list";
+
+  switch (action) {
+    case "list":
+      return output({ ok: true, themes: listThemeDefinitions(), count: listThemeDefinitions().length }, opts);
+
+    case "show": {
+      requireArg(args[1], "theme name");
+      const theme = assertThemeName(args[1]);
+      return output({ ok: true, theme }, opts);
+    }
+
+    default:
+      throw new CliError("unknown_theme_command", `Unknown theme command: ${action}`);
   }
 }
 
@@ -297,6 +335,17 @@ function requireOption(value, label) {
   }
 }
 
+function assertThemeName(name) {
+  const theme = findThemeDefinition(name);
+  if (!theme) {
+    throw new CliError("unknown_theme", `Unknown theme: ${name}`, {
+      availableThemes: listThemeDefinitions().map((entry) => entry.name),
+    });
+  }
+
+  return theme;
+}
+
 function printHelp() {
   process.stdout.write(`invoicer
 
@@ -304,11 +353,13 @@ Agent-friendly invoice CLI inspired by Invoicely.
 
 Usage:
   invoicer schema --json
-  invoicer invoice init [--out invoice.json] --json
+  invoicer theme list --json
+  invoicer theme show <name> --json
+  invoicer invoice init [--theme default|vercel|executive|ledger|studio|minimal|aurora] [--out invoice.json] --json
   invoicer invoice validate <invoice.json> --json
   invoicer invoice total <invoice.json> --json
-  invoicer invoice render <invoice.json> --format html --out invoice.html --json
-  invoicer invoice render <invoice.json> --format pdf --out invoice.pdf --json
+  invoicer invoice render <invoice.json> --format html [--theme name] --out invoice.html --json
+  invoicer invoice render <invoice.json> --format pdf [--theme name] --out invoice.pdf --json
   invoicer invoice create <invoice.json> [--store .invoicer/invoices.json] --json
   invoicer invoice list [--store .invoicer/invoices.json] --json
   invoicer invoice get <id> [--store .invoicer/invoices.json] --json

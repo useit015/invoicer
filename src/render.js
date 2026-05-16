@@ -1,11 +1,12 @@
 import { calculateInvoiceTotals } from "./schema.js";
+import { resolveInvoiceTheme } from "./themes.js";
 
-export function renderInvoiceHtml(invoice) {
+export function renderInvoiceHtml(invoice, options = {}) {
   const totals = calculateInvoiceTotals(invoice);
   const serial = `${invoice.invoiceDetails.prefix}${invoice.invoiceDetails.serialNumber}`;
-  const themeColor = invoice.invoiceDetails.theme.baseColor || "#635CFF";
-  const darkMode = invoice.invoiceDetails.theme.mode === "dark";
-  const pageClass = darkMode ? "invoice invoice-dark" : "invoice";
+  const theme = resolveInvoiceTheme(invoice, options.theme);
+  const pageClass = `invoice invoice-${theme.mode} template-${theme.name}`;
+  const tokens = theme.tokens;
   const rows = invoice.items
     .map(
       (item) => `
@@ -34,32 +35,47 @@ export function renderInvoiceHtml(invoice) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(serial)}</title>
     <style>
-      :root { --accent: ${escapeHtml(themeColor)}; color-scheme: light dark; }
-      body { margin: 0; background: #f4f5f7; font-family: Arial, sans-serif; color: #15171a; }
-      .invoice { width: min(920px, calc(100% - 32px)); margin: 24px auto; background: #fff; padding: 36px; border: 1px solid #d8dde6; }
-      .invoice-dark { background: #181818; color: #f5f5f5; border-color: #303030; }
+      :root {
+        --accent: ${escapeCssValue(theme.baseColor)};
+        --body-bg: ${escapeCssValue(tokens.bodyBackground)};
+        --paper-bg: ${escapeCssValue(tokens.paperBackground)};
+        --text: ${escapeCssValue(tokens.text)};
+        --muted: ${escapeCssValue(tokens.muted)};
+        --border: ${escapeCssValue(tokens.border)};
+        --surface: ${escapeCssValue(tokens.surface)};
+        --radius: ${escapeCssValue(tokens.radius)};
+        color-scheme: ${theme.mode};
+      }
+      body { margin: 0; background: var(--body-bg); font-family: ${escapeCssValue(tokens.fontFamily)}; color: var(--text); }
+      .invoice { width: min(920px, calc(100% - 32px)); margin: 24px auto; background: var(--paper-bg); padding: 36px; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 18px 40px rgba(15, 23, 42, .08); }
       header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 3px solid var(--accent); padding-bottom: 20px; }
       h1 { margin: 0; color: var(--accent); font-size: 32px; }
       h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
       section { margin-top: 24px; }
       .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-      .box { border: 1px solid #d8dde6; padding: 16px; border-radius: 6px; }
-      .invoice-dark .box { border-color: #303030; }
+      .box { border: 1px solid var(--border); background: var(--surface); padding: 16px; border-radius: var(--radius); }
       table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-      th, td { border-bottom: 1px solid #d8dde6; text-align: left; padding: 10px; vertical-align: top; }
-      .invoice-dark th, .invoice-dark td { border-color: #303030; }
+      th, td { border-bottom: 1px solid var(--border); text-align: left; padding: 10px; vertical-align: top; }
       th:nth-child(n+2), td:nth-child(n+2) { text-align: right; }
-      td span, .muted { color: #667085; }
+      td span, .muted, .theme-kicker { color: var(--muted); }
+      .theme-kicker { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
       .totals { margin-left: auto; max-width: 360px; }
-      .total-row { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #d8dde6; }
-      .invoice-dark .total-row { border-color: #303030; }
+      .total-row { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
       .grand-total { font-size: 20px; color: var(--accent); }
+      .template-vercel { box-shadow: none; }
+      .template-vercel header { border: 1px solid var(--border); padding: 20px; background: #111; }
+      .template-executive h1 { font-family: Georgia, 'Times New Roman', serif; letter-spacing: .03em; }
+      .template-ledger table { font-variant-numeric: tabular-nums; }
+      .template-studio header { border-bottom-style: dotted; }
+      .template-minimal { box-shadow: none; }
+      .template-aurora header { background: var(--surface); padding: 20px; border-radius: var(--radius); }
     </style>
   </head>
   <body>
     <main class="${pageClass}">
       <header>
         <div>
+          <p class="theme-kicker">${escapeHtml(theme.label)}</p>
           <h1>${escapeHtml(serial)}</h1>
           <p class="muted">Currency: ${escapeHtml(invoice.invoiceDetails.currency)}</p>
         </div>
@@ -106,8 +122,8 @@ export function renderInvoiceHtml(invoice) {
 `;
 }
 
-export function renderInvoicePdf(invoice) {
-  const lines = invoicePdfLines(invoice).flatMap((line) => wrapPdfLine(line, 92));
+export function renderInvoicePdf(invoice, options = {}) {
+  const lines = invoicePdfLines(invoice, options).flatMap((line) => wrapPdfLine(line, 92));
   const content = [
     "BT",
     "/F1 11 Tf",
@@ -158,6 +174,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function escapeCssValue(value) {
+  return String(value)
+    .replaceAll("\\", "\\\\")
+    .replaceAll("<", "")
+    .replaceAll(">", "")
+    .replaceAll("\n", " ");
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(value));
 }
@@ -166,11 +190,13 @@ function formatMoney(value) {
   return Number(value).toFixed(2);
 }
 
-function invoicePdfLines(invoice) {
+function invoicePdfLines(invoice, options = {}) {
   const totals = calculateInvoiceTotals(invoice);
+  const theme = resolveInvoiceTheme(invoice, options.theme);
   const serial = `${invoice.invoiceDetails.prefix}${invoice.invoiceDetails.serialNumber}`;
   const lines = [
     `Invoice ${serial}`,
+    `Theme: ${theme.label} (${theme.name})`,
     `Currency: ${invoice.invoiceDetails.currency}`,
     `Date: ${invoice.invoiceDetails.date}`,
   ];

@@ -1,12 +1,16 @@
+import { getThemeDefinition, THEME_NAMES } from "./themes.js";
+
 export const SCHEMA_VERSION = "invoicer.invoice.v1";
 
 export const STATUS_VALUES = ["pending", "success", "error", "expired", "refunded"];
 export const STORAGE_TYPES = ["local", "server"];
 export const VALUE_TYPES = ["fixed", "percentage"];
-export const TEMPLATE_NAMES = ["default", "vercel"];
+export const TEMPLATE_NAMES = THEME_NAMES;
 export const THEME_MODES = ["dark", "light"];
 
-export function createDefaultInvoice(now = new Date()) {
+export function createDefaultInvoice(now = new Date(), options = {}) {
+  const theme = getThemeDefinition(options.theme ?? "default");
+
   return {
     schemaVersion: SCHEMA_VERSION,
     companyDetails: {
@@ -21,11 +25,11 @@ export function createDefaultInvoice(now = new Date()) {
     },
     invoiceDetails: {
       theme: {
-        template: "default",
-        baseColor: "#635CFF",
-        mode: "light",
+        template: theme.name,
+        baseColor: options.baseColor ?? theme.baseColor,
+        mode: options.mode ?? theme.mode,
       },
-      currency: "USD",
+      currency: options.currency ?? "USD",
       prefix: "Invoice INV-",
       serialNumber: "0001",
       date: now.toISOString(),
@@ -48,6 +52,7 @@ export function invoiceSchemaContract() {
     statusValues: STATUS_VALUES,
     storageTypes: STORAGE_TYPES,
     templates: TEMPLATE_NAMES,
+    themeCount: TEMPLATE_NAMES.length,
     valueTypes: VALUE_TYPES,
     requiredTopLevelFields: ["companyDetails", "clientDetails", "invoiceDetails", "items", "metadata"],
     fieldNotes: {

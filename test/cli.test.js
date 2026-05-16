@@ -26,15 +26,27 @@ test("schema exposes the agent contract", () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.schema.schemaVersion, "invoicer.invoice.v1");
+  assert.ok(result.schema.themeCount >= 7);
+  assert.ok(result.schema.templates.includes("executive"));
   assert.deepEqual(result.schema.statusValues, ["pending", "success", "error", "expired", "refunded"]);
 });
 
-test("invoice init emits a valid scaffold", () => {
-  const result = runJson(["invoice", "init"]);
+test("theme list exposes professional render themes", () => {
+  const result = runJson(["theme", "list"]);
+
+  assert.equal(result.ok, true);
+  assert.ok(result.count >= 7);
+  assert.ok(result.themes.some((theme) => theme.name === "studio" && theme.label === "Studio Coral"));
+});
+
+test("invoice init emits a valid themed scaffold", () => {
+  const result = runJson(["invoice", "init", "--theme", "ledger", "--currency", "EUR"]);
 
   assert.equal(result.ok, true);
   assert.equal(result.invoice.companyDetails.name, "Invoicely Ltd");
-  assert.equal(result.invoice.invoiceDetails.currency, "USD");
+  assert.equal(result.invoice.invoiceDetails.currency, "EUR");
+  assert.equal(result.invoice.invoiceDetails.theme.template, "ledger");
+  assert.equal(result.invoice.invoiceDetails.theme.baseColor, "#047857");
 });
 
 test("invoice validate and total work for the sample fixture", () => {
@@ -94,11 +106,13 @@ test("local invoice lifecycle supports create list get status edit and delete", 
 test("invoice render writes HTML output", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "invoicer-render-"));
   const out = path.join(dir, "invoice.html");
-  const result = runJson(["invoice", "render", sample, "--format", "html", "--out", out]);
+  const result = runJson(["invoice", "render", sample, "--format", "html", "--theme", "studio", "--out", out]);
   const html = readFileSync(out, "utf8");
 
   assert.equal(result.ok, true);
   assert.equal(result.outputPath, out);
+  assert.match(html, /template-studio/);
+  assert.match(html, /Studio Coral/);
   assert.match(html, /INV-2026-0001/);
   assert.match(html, /Northstar Studio LLC/);
 });

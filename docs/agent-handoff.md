@@ -11,11 +11,12 @@ Run these from the repository root:
 ```bash
 npm test
 node src/cli.js schema --json
+node src/cli.js theme list --json
 node src/cli.js invoice init --json
 node src/cli.js invoice validate examples/invoice.sample.json --json
 node src/cli.js invoice total examples/invoice.sample.json --json
-node src/cli.js invoice render examples/invoice.sample.json --format html --out .invoicer/sample.html --json
-node src/cli.js invoice render examples/invoice.sample.json --format pdf --out .invoicer/sample.pdf --json
+node src/cli.js invoice render examples/invoice.sample.json --format html --theme executive --out .invoicer/sample.html --json
+node src/cli.js invoice render examples/invoice.sample.json --format pdf --theme executive --out .invoicer/sample.pdf --json
 ```
 
 ## Data Contract
@@ -29,6 +30,22 @@ The canonical invoice file mirrors the reference Invoicely create flow:
 - `metadata`: notes, terms, and payment information pairs.
 
 Use `node src/cli.js schema --json` for the machine-readable contract and `examples/invoice.sample.json` for a fixture.
+
+## Themes
+
+Use `node src/cli.js theme list --json` to discover built-in themes. Current theme names are:
+
+```text
+default
+vercel
+executive
+ledger
+studio
+minimal
+aurora
+```
+
+Use `invoice init --theme <name>` when creating a new invoice fixture, or `invoice render --theme <name>` to render an existing invoice with a different professional look without changing the source file.
 
 ## Storage
 
@@ -50,7 +67,7 @@ Structured errors look like:
 
 ## Known Parity Gaps
 
-- PNG rendering is not implemented in this milestone; the CLI writes deterministic HTML and dependency-free PDF.
+- PNG rendering is not implemented yet; the CLI writes deterministic themed HTML and dependency-free themed PDF.
 - Server-backed storage, authentication, and Cloudflare R2 are not implemented.
 - The web dashboard is not implemented because the local repo started blank.
 
