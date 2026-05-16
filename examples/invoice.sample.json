@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "invoicer.invoice.v1",
+  "companyDetails": {
+    "name": "Northstar Studio LLC",
+    "address": "120 Market Street, San Francisco, CA",
+    "metadata": [
+      {
+        "label": "Tax ID",
+        "value": "US-123456789"
+      }
+    ]
+  },
+  "clientDetails": {
+    "name": "Acme Operations Inc.",
+    "address": "44 Client Avenue, New York, NY",
+    "metadata": [
+      {
+        "label": "Email",
+        "value": "ap@acme.example"
+      }
+    ]
+  },
+  "invoiceDetails": {
+    "theme": {
+      "template": "default",
+      "baseColor": "#2563eb",
+      "mode": "light"
+    },
+    "currency": "USD",
+    "prefix": "INV-",
+    "serialNumber": "2026-0001",
+    "date": "2026-05-16T00:00:00.000Z",
+    "dueDate": "2026-06-15T00:00:00.000Z",
+    "paymentTerms": "Net 30",
+    "billingDetails": [
+      {
+        "label": "VAT",
+        "type": "percentage",
+        "value": 10
+      },
+      {
+        "label": "Retainer credit",
+        "type": "fixed",
+        "value": -25
+      }
+    ]
+  },
+  "items": [
+    {
+      "name": "Design systems audit",
+      "description": "Review of invoicing workflow and design tokens",
+      "quantity": 2,
+      "unitPrice": 150
+    },
+    {
+      "name": "Implementation planning",
+      "description": "Agent-ready CLI and workflow scope",
+      "quantity": 1,
+      "unitPrice": 75
+    }
+  ],
+  "metadata": {
+    "notes": "Thank you for working with us.",
+    "terms": "Payment due within 30 days.",
+    "paymentInformation": [
+      {
+        "label": "ACH",
+        "value": "Routing 000000000 / Account 111111111"
+      }
+    ]
+  }
+}
